@@ -1,8 +1,9 @@
 #pragma once
 
-#include <list>
+#include <fstream>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace my_json {
 
@@ -72,13 +73,18 @@ namespace my_json {
         Json &operator[](const char *key);
         Json &operator[](const std::string &key);
 
+        operator bool() const;
+        operator int() const;
+        operator double() const;
+        operator std::string() const;
+        operator std::vector<Json>() const;
+        operator std::map<std::string, Json>() const;
+
         std::ostream &operator<<(std::ostream &os);
 
         void parse(const char *json);
         void parse(const std::string &json);
-
-        void parse_from_file(const char *filename);
-        void parse_from_file(const std::string &filename);
+        void parse(const std::ifstream &file);
 
     private:
         void copy(const Json &other);
@@ -88,7 +94,7 @@ namespace my_json {
             int data_int;
             double data_double;
             std::string *data_string;
-            std::list<Json> *data_array;
+            std::vector<Json> *data_array;
             std::map<std::string, Json> *data_object;
         };
 

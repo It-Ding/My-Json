@@ -1,7 +1,4 @@
 #include "Json.h"
-#include <ostream>
-#include <stdexcept>
-#include <string>
 #include <system_error>
 using namespace my_json;
 
@@ -13,7 +10,7 @@ Json::Json(Type type) : data_type(type) {
         value.data_string = new std::string();
         break;
     case json_array:
-        value.data_array = new std::list<Json>();
+        value.data_array = new std::vector<Json>();
         break;
     case json_object:
         value.data_object = new std::map<std::string, Json>();
@@ -224,21 +221,33 @@ void Json::push_back(const Json &value) {
 void Json::push_back(Json &&value) {
     if (this->is_array())
         this->value.data_array->push_back(std::move(value));
-    else
+    else if (this->is_null()) {
+        this->data_type = json_array;
+        this->value.data_array = new std::vector<Json>();
+        this->value.data_array->push_back(std::move(value));
+    } else
         throw std::logic_error("");
 }
 
 void Json::push_front(const Json &value) {
     if (this->is_array())
-        this->value.data_array->push_front(value);
-    else
+        this->value.data_array->insert(this->value.data_array->begin(), value);
+    else if (this->is_null()) {
+        this->data_type = json_array;
+        this->value.data_array = new std::vector<Json>();
+        this->value.data_array->push_back(value);
+    } else
         throw std::logic_error("");
 }
 
 void Json::push_front(Json &&value) {
     if (this->is_array())
-        this->value.data_array->push_front(std::move(value));
-    else
+        this->value.data_array->insert(this->value.data_array->begin(), std::move(value));
+    else if (this->is_null()) {
+        this->data_type = json_array;
+        this->value.data_array = new std::vector<Json>();
+        this->value.data_array->push_back(std::move(value));
+    } else
         throw std::logic_error("");
 }
 
@@ -313,10 +322,7 @@ Json &Json::operator[](int index) {
     if (this->is_array()) {
         int size = this->value.data_array->size();
         if (index >= 0 && index < size) {
-            auto iter = this->value.data_array->begin();
-            for (int i = 0; i < index; i++)
-                iter++;
-            return *iter;
+            return this->value.data_array->at(index);
         }
         throw std::out_of_range("");
     } else
@@ -334,7 +340,14 @@ Json &Json::operator[](const std::string &key) {
         auto iter = this->value.data_object->find(key);
         if (iter != this->value.data_object->end())
             return iter->second;
-        throw std::out_of_range("");
+        else {
+            this->value.data_object->insert(std::make_pair(key, Json()));
+            return (*this)[key];
+        }
+    } else if (this->is_null()) {
+        this->data_type = json_object;
+        this->value.data_object = new std::map<std::string, Json>();
+        return (*this)[key];
     } else
         throw std::logic_error("");
 }
@@ -354,14 +367,9 @@ void Json::parse(const std::string &json) {
     // TODO:还差解析部分没写
 }
 
-void Json::parse_from_file(const char *file_name) {
-    std::string str(file_name);
-    this->parse_from_file(str);
-}
-
-void Json::parse_from_file(const std::string &file_name) {
+void Json::parse(const std::ifstream &file) {
     this->clear();
-    // TODO
+    // TODO:还差解析部分没写
 }
 
 void Json::copy(const Json &other) {
@@ -380,7 +388,7 @@ void Json::copy(const Json &other) {
         value.data_string = new std::string(*other.value.data_string);
         break;
     case json_array:
-        value.data_array = new std::list<Json>(*other.value.data_array);
+        value.data_array = new std::vector<Json>(*other.value.data_array);
         break;
     case json_object:
         value.data_object = new std::map<std::string, Json>(*other.value.data_object);
