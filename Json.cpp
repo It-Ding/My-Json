@@ -54,7 +54,9 @@ Json::Json(const Json &other) {
 }
 
 Json::Json(Json &&other) {
-    *this = std::move(other);
+    this->data_type = other.data_type;
+    this->value = other.value;
+    other.data_type = json_null;
 }
 
 Json::~Json() {
@@ -173,6 +175,7 @@ void Json::clear() {
     default:
         break;
     }
+    data_type = json_null;
 }
 
 std::string Json::to_string() const {
@@ -317,7 +320,9 @@ Json &Json::operator=(const Json &other) {
 
 Json &Json::operator=(Json &&other) {
     this->clear();
-    (*this) = std::move(other);
+    this->data_type = other.data_type;
+    this->value = other.value;
+    other.data_type = json_null;
     return *this;
 }
 
