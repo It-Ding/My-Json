@@ -85,7 +85,9 @@ namespace my_json {
         operator std::vector<Json>() const;
         operator std::map<std::string, Json>() const;
 
-        std::ostream &operator<<(std::ostream &os);
+        // 请暂时不要使用这个函数，我无法保证它的正确性
+        // 如需输出请使用 to_string() 函数
+        // friend std::ostream &operator<<(std::ostream &os, const Json &json);
 
         void parse(const char *json);
         void parse(const std::string &json);
