@@ -1,4 +1,5 @@
 #include "Json.h"
+#include <map>
 #include <system_error>
 using namespace my_json;
 
@@ -40,8 +41,20 @@ Json::Json(std::string value) : data_type(json_string) {
     this->value.data_string = new std::string(value);
 }
 
+Json::Json(std::vector<Json> value) : data_type(json_array) {
+    this->value.data_array = new std::vector<Json>(value);
+}
+
+Json::Json(std::map<std::string, Json> value) : data_type(json_object) {
+    this->value.data_object = new std::map<std::string, Json>(value);
+}
+
 Json::Json(const Json &other) {
     this->copy(other);
+}
+
+Json::Json(Json &&other) {
+    *this = std::move(other);
 }
 
 Json::~Json() {
@@ -101,6 +114,18 @@ double Json::get_double() const {
 std::string Json::get_string() const {
     if (this->is_string())
         return *value.data_string;
+    throw std::logic_error("");
+}
+
+std::vector<Json> Json::get_array() const {
+    if (this->is_array())
+        return *value.data_array;
+    throw std::logic_error("");
+}
+
+std::map<std::string, Json> Json::get_object() const {
+    if (this->is_object())
+        return *value.data_object;
     throw std::logic_error("");
 }
 
@@ -214,7 +239,11 @@ bool Json::has_key(const std::string &key) const {
 void Json::push_back(const Json &value) {
     if (this->is_array())
         this->value.data_array->push_back(value);
-    else
+    else if (this->is_null()) {
+        this->data_type = json_array;
+        this->value.data_array = new std::vector<Json>();
+        this->value.data_array->push_back(value);
+    } else
         throw std::logic_error("");
 }
 
@@ -253,11 +282,13 @@ void Json::push_front(Json &&value) {
 
 void Json::erase(int index) {
     if (this->is_array()) {
-        auto iter = this->value.data_array->begin();
-        for (int i = 0; i < index; i++)
-            iter++;
-        iter->clear();
-        this->value.data_array->erase(iter);
+        int size = this->value.data_array->size();
+        if (index >= 0 || index < size) {
+            auto iter = this->value.data_array->begin() + index;
+            iter->clear();
+            this->value.data_array->erase(iter);
+        } else
+            throw std::out_of_range("");
     } else
         throw std::logic_error("");
 }
@@ -349,6 +380,48 @@ Json &Json::operator[](const std::string &key) {
         this->value.data_object = new std::map<std::string, Json>();
         return (*this)[key];
     } else
+        throw std::logic_error("");
+}
+
+Json::operator bool() const {
+    if (this->is_bool())
+        return this->value.data_bool;
+    else
+        throw std::logic_error("");
+}
+
+Json::operator int() const {
+    if (this->is_int())
+        return this->value.data_int;
+    else
+        throw std::logic_error("");
+}
+
+Json::operator double() const {
+    if (this->is_double())
+        return this->value.data_double;
+    else
+        throw std::logic_error("");
+}
+
+Json::operator std::string() const {
+    if (this->is_string())
+        return *this->value.data_string;
+    else
+        throw std::logic_error("");
+}
+
+Json::operator std::vector<Json>() const {
+    if (this->is_array())
+        return *this->value.data_array;
+    else
+        throw std::logic_error("");
+}
+
+Json::operator std::map<std::string, Json>() const {
+    if (this->is_object())
+        return *this->value.data_object;
+    else
         throw std::logic_error("");
 }
 

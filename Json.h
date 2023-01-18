@@ -26,7 +26,10 @@ namespace my_json {
         Json(double value);
         Json(const char *value);
         Json(std::string value);
+        Json(std::vector<Json> value);
+        Json(std::map<std::string, Json> value);
         Json(const Json &other);
+        Json(Json &&other);
         ~Json();
 
         Type type() const;
@@ -43,6 +46,8 @@ namespace my_json {
         int get_int() const;
         double get_double() const;
         std::string get_string() const;
+        std::vector<Json> get_array() const;
+        std::map<std::string, Json> get_object() const;
 
         int size() const;
         bool empty() const;
