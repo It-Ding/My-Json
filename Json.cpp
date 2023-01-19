@@ -97,37 +97,37 @@ bool Json::is_object() const {
 bool Json::get_bool() const {
     if (this->is_bool())
         return value.data_bool;
-    throw std::logic_error("function Json::get_bool type error");
+    throw std::logic_error("function Json::get_bool: type error");
 }
 
 int Json::get_int() const {
     if (this->is_int())
         return value.data_int;
-    throw std::logic_error("");
+    throw std::logic_error("function Json::get_int: type error");
 }
 
 double Json::get_double() const {
     if (this->is_double())
         return value.data_double;
-    throw std::logic_error("");
+    throw std::logic_error("function Json::get_double: type error");
 }
 
 std::string Json::get_string() const {
     if (this->is_string())
         return *value.data_string;
-    throw std::logic_error("");
+    throw std::logic_error("function Json::get_string: type error");
 }
 
 std::vector<Json> Json::get_array() const {
     if (this->is_array())
         return *value.data_array;
-    throw std::logic_error("");
+    throw std::logic_error("function Json::get_array: type error");
 }
 
 std::map<std::string, Json> Json::get_object() const {
     if (this->is_object())
         return *value.data_object;
-    throw std::logic_error("");
+    throw std::logic_error("function Json::get_object: type error");
 }
 
 int Json::size() const {
@@ -139,7 +139,7 @@ int Json::size() const {
     default:
         break;
     }
-    throw std::logic_error("");
+    throw std::logic_error("function Json::size: this json object is not array or map,cam't get size");
 }
 
 bool Json::empty() const {
@@ -153,7 +153,7 @@ bool Json::empty() const {
     default:
         break;
     }
-    throw std::logic_error("");
+    throw std::logic_error("function Json::empty: type error");
 }
 
 void Json::clear() {
@@ -193,7 +193,7 @@ std::string Json::to_string() const {
         str = std::to_string(value.data_double);
         break;
     case json_string:
-        str = *value.data_string;
+        str = "\"" + *value.data_string + "\"";
         break;
     case json_array:
         str = "[";
@@ -229,13 +229,13 @@ bool Json::has_key(const char *key) const {
     std::string str(key);
     if (this->is_object())
         return value.data_object->find(str) != value.data_object->end();
-    throw std::logic_error("");
+    throw std::logic_error("function Json::has_key: type error");
 }
 
 bool Json::has_key(const std::string &key) const {
     if (this->is_object())
         return value.data_object->find(key) != value.data_object->end();
-    throw std::logic_error("");
+    throw std::logic_error("function Json::has_key: type error");
 }
 
 void Json::push_back(const Json &value) {
@@ -246,7 +246,7 @@ void Json::push_back(const Json &value) {
         this->value.data_array = new std::vector<Json>();
         this->value.data_array->push_back(value);
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::push_back: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
 }
 
 void Json::push_back(Json &&value) {
@@ -257,7 +257,7 @@ void Json::push_back(Json &&value) {
         this->value.data_array = new std::vector<Json>();
         this->value.data_array->push_back(std::move(value));
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::push_back: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
 }
 
 void Json::push_front(const Json &value) {
@@ -268,7 +268,7 @@ void Json::push_front(const Json &value) {
         this->value.data_array = new std::vector<Json>();
         this->value.data_array->push_back(value);
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::push_front: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
 }
 
 void Json::push_front(Json &&value) {
@@ -279,7 +279,7 @@ void Json::push_front(Json &&value) {
         this->value.data_array = new std::vector<Json>();
         this->value.data_array->push_back(std::move(value));
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::push_front: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
 }
 
 void Json::erase(int index) {
@@ -290,9 +290,9 @@ void Json::erase(int index) {
             iter->clear();
             this->value.data_array->erase(iter);
         } else
-            throw std::out_of_range("");
+            throw std::out_of_range("function Json::erase: index out of range");
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::erase: type error");
 }
 
 void Json::erase(const char *key) {
@@ -308,7 +308,7 @@ void Json::erase(const std::string &key) {
             this->value.data_object->erase(iter);
         }
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::erase: type error");
 }
 
 Json &Json::operator=(const Json &other) {
@@ -359,9 +359,9 @@ Json &Json::operator[](int index) {
         if (index >= 0 && index < size) {
             return this->value.data_array->at(index);
         }
-        throw std::out_of_range("");
+        throw std::out_of_range("function Json::operator[]: index out of range");
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator[]: type error");
 }
 
 Json &Json::operator[](const char *key) {
@@ -384,49 +384,49 @@ Json &Json::operator[](const std::string &key) {
         this->value.data_object = new std::map<std::string, Json>();
         return (*this)[key];
     } else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator[]: type error");
 }
 
 Json::operator bool() const {
     if (this->is_bool())
         return this->value.data_bool;
     else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator bool(): type error");
 }
 
 Json::operator int() const {
     if (this->is_int())
         return this->value.data_int;
     else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator int(): type error");
 }
 
 Json::operator double() const {
     if (this->is_double())
         return this->value.data_double;
     else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator double(): type error");
 }
 
 Json::operator std::string() const {
     if (this->is_string())
         return *this->value.data_string;
     else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator std::string(): type error");
 }
 
 Json::operator std::vector<Json>() const {
     if (this->is_array())
         return *this->value.data_array;
     else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator std::vector<Json>(): type error");
 }
 
 Json::operator std::map<std::string, Json>() const {
     if (this->is_object())
         return *this->value.data_object;
     else
-        throw std::logic_error("");
+        throw std::logic_error("function Json::operator std::map<std::string, Json>(): type error");
 }
 
 // operator<<
@@ -442,12 +442,19 @@ void Json::parse(const char *json) {
 
 void Json::parse(const std::string &json) {
     this->clear();
-    // TODO:还差解析部分没写
+    Parser parser(json);
+    *this = parser.parse();
 }
 
-void Json::parse(const std::ifstream &file) {
+void Json::parse(std::ifstream &file) {
     this->clear();
-    // TODO:还差解析部分没写
+    std::string json;
+    std::string line;
+    if (!file.is_open())
+        throw std::runtime_error("function Json::parse: file is not open");
+    while (std::getline(file, line))
+        json += line;
+    this->parse(json);
 }
 
 void Json::copy(const Json &other) {

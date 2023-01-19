@@ -91,9 +91,215 @@ namespace my_json {
 
         void parse(const char *json);
         void parse(const std::string &json);
-        void parse(const std::ifstream &file);
+        void parse(std::ifstream &file);
 
     private:
+        class Parser {
+        public:
+            Parser() : index(0){};
+            Parser(const std::string &json) : json(json), index(0){};
+            ~Parser(){};
+
+            void set_json(const std::string &json) {
+                this->json = json;
+                index = 0;
+            }
+
+            Json parse() {
+                this->skip_space();
+                char ch = this->get_next();
+                switch (ch) {
+                case 'n':
+                    index--;
+                    return this->check_null();
+                case 't':
+                case 'f':
+                    index--;
+                    return this->check_bool();
+                case '"':
+                    return this->check_string();
+                case '[':
+                    return this->check_array();
+                case '{':
+                    return this->check_object();
+                default:
+                    if (ch >= '0' && ch <= '9' || ch == '-') {
+                        index--;
+                        return this->check_number();
+                    } else
+                        throw std::logic_error("Unexpected character");
+                }
+            }
+
+        private:
+            void skip_space() {
+                while (json[index] == ' ' || json[index] == '\t' || json[index] == '\r' || json[index] == '\n')
+                    index++;
+            }
+
+            char get_next() {
+                this->skip_space();
+                if (index == json.size())
+                    throw std::runtime_error("Unexpected end of json");
+                return json[index++];
+            }
+
+            Json check_null() {
+                if (json.substr(index, 4) == "null") {
+                    index += 4;
+                    return Json();
+                }
+                throw std::logic_error("Unexpected character");
+            }
+
+            Json check_bool() {
+                if (json.substr(index, 4) == "true") {
+                    index += 4;
+                    return Json(true);
+                }
+                if (json.substr(index, 5) == "false") {
+                    index += 5;
+                    return Json(false);
+                }
+                throw std::logic_error("Unexpected character");
+            }
+
+            Json check_number() {
+                int start = index;
+                if (json[index] == '-')
+                    index++;
+                if (json[index] == '0')
+                    index++;
+                else if (json[index] >= '1' && json[index] <= '9') {
+                    index++;
+                    while (json[index] >= '0' && json[index] <= '9')
+                        index++;
+                } else
+                    throw std::logic_error("Unexpected character");
+                if (json[index] == '.') {
+                    index++;
+                    if (json[index] >= '0' && json[index] <= '9') {
+                        index++;
+                        while (json[index] >= '0' && json[index] <= '9')
+                            index++;
+                    } else
+                        throw std::logic_error("Unexpected character");
+                }
+                if (json[index] == 'e' || json[index] == 'E') {
+                    index++;
+                    if (json[index] == '+' || json[index] == '-')
+                        index++;
+                    if (json[index] >= '0' && json[index] <= '9') {
+                        index++;
+                        while (json[index] >= '0' && json[index] <= '9')
+                            index++;
+                    } else
+                        throw std::logic_error("Unexpected character");
+                }
+                std::string number = json.substr(start, index - start);
+                if (number.find('.') != std::string::npos || number.find('e') != std::string::npos || number.find('E') != std::string::npos)
+                    return Json(std::stod(number));
+                else
+                    return Json(std::stoi(number));
+            }
+
+            std::string check_string() {
+                std::string str;
+                while (true) {
+                    char ch = this->get_next();
+                    if (ch == '\\') {
+                        ch = this->get_next();
+                        switch (ch) {
+                        case '"':
+                            str += '"';
+                            break;
+                        case '\\':
+                            str += '\\';
+                            break;
+                        case '/':
+                            str += '/';
+                            break;
+                        case 'b':
+                            str += '\b';
+                            break;
+                        case 'f':
+                            str += '\f';
+                            break;
+                        case 'n':
+                            str += '\n';
+                            break;
+                        case 'r':
+                            str += '\r';
+                            break;
+                        case 't':
+                            str += '\t';
+                            break;
+                        case 'u':
+                            index += 4;
+                            break;
+                        default:
+                            throw std::logic_error("Unexpected character");
+                        }
+                    } else if (ch == '"')
+                        return str;
+                    else
+                        str += ch;
+                }
+            }
+
+            Json check_array() {
+                Json array = Json(json_array);
+                while (true) {
+                    this->skip_space();
+                    if (json[index] == ']') {
+                        index++;
+                        return array;
+                    }
+                    array.push_back(this->parse());
+                    this->skip_space();
+                    if (json[index] == ']') {
+                        index++;
+                        return array;
+                    }
+                    if (json[index] == ',')
+                        index++;
+                    else
+                        throw std::logic_error("Unexpected character");
+                }
+            }
+
+            Json check_object() {
+                Json object = Json(json_object);
+                while (true) {
+                    this->skip_space();
+                    if (json[index] == '}') {
+                        index++;
+                        return object;
+                    }
+                    this->get_next();
+                    std::string key = this->check_string();
+                    this->skip_space();
+                    if (json[index] == ':')
+                        index++;
+                    else
+                        throw std::logic_error("Unexpected character");
+                    object[key] = this->parse();
+                    this->skip_space();
+                    if (json[index] == '}') {
+                        index++;
+                        return object;
+                    }
+                    if (json[index] == ',')
+                        index++;
+                    else
+                        throw std::logic_error("Unexpected character");
+                }
+            }
+
+            std::string json;
+            int index;
+        };
+
         void copy(const Json &other);
 
         union Value {
