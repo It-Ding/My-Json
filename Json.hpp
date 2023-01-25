@@ -266,17 +266,6 @@ namespace my_json {
                 throw std::logic_error("function Json::push_back: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
         }
 
-        void push_back(Json &&value) {
-            if (this->is_array())
-                this->value.data_array->push_back(std::move(value));
-            else if (this->is_null()) {
-                this->data_type = json_array;
-                this->value.data_array = new std::vector<Json>();
-                this->value.data_array->push_back(std::move(value));
-            } else
-                throw std::logic_error("function Json::push_back: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
-        }
-
         void push_front(const Json &value) {
             if (this->is_array())
                 this->value.data_array->insert(this->value.data_array->begin(), value);
@@ -284,17 +273,6 @@ namespace my_json {
                 this->data_type = json_array;
                 this->value.data_array = new std::vector<Json>();
                 this->value.data_array->push_back(value);
-            } else
-                throw std::logic_error("function Json::push_front: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
-        }
-
-        void push_front(Json &&value) {
-            if (this->is_array())
-                this->value.data_array->insert(this->value.data_array->begin(), std::move(value));
-            else if (this->is_null()) {
-                this->data_type = json_array;
-                this->value.data_array = new std::vector<Json>();
-                this->value.data_array->push_back(std::move(value));
             } else
                 throw std::logic_error("function Json::push_front: This object has been defined as another type, if you want to force changes to the properties of this object, call the clear() function first");
         }
