@@ -61,9 +61,7 @@ namespace my_json {
         bool has_key(const std::string &key) const;
 
         void push_back(const Json &value);
-        void push_back(Json &&value);
         void push_front(const Json &value);
-        void push_front(Json &&value);
 
         void erase(int index);
         void erase(const char *key);
